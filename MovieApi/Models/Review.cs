@@ -10,7 +10,10 @@ namespace MovieApi.Models
         [Range(1,5)]
         public int Rating { get; set; }
 
+        //FK
+        public int MovieId { get; set; }
+
         //nav prop
-        public Movie MovieId { get; set; } = null!;
+        public Movie Movie { get; set; } = null!;
     }
 }

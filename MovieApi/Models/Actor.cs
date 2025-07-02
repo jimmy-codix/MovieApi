@@ -5,9 +5,7 @@
         public int Id { get; set; }
         public string Name { get; set; } = null!;
         public int BirthYear { get; set; }
-        public int MoveId { get; set; }
 
-        public int MovieId { get; set; }
-
+        public ICollection<Movie> Movies { get; set; } = new List<Movie>();
     }
 }
