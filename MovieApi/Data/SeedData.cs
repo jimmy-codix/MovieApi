@@ -1,4 +1,5 @@
 ﻿using Bogus;
+using Microsoft.EntityFrameworkCore;
 using MovieApi.Models;
 using System.Collections;
 
@@ -10,6 +11,8 @@ namespace MovieApi.Data
 
         internal static async Task InitAsync(MovieApiContext context)
         {
+            if (await context.Movie.AnyAsync()) return;
+
             var movies = GenerateMovies(5);
             await context.AddRangeAsync(movies);
             //To get Ids for movies
