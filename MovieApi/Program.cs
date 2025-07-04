@@ -1,12 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MovieApi.Data;
+using MovieApi.Extensions;
 
 namespace MovieApi
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddDbContext<MovieApiContext>(options =>
@@ -24,6 +25,7 @@ namespace MovieApi
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
+                await app.SeedDataAsync();
             }
 
             app.UseHttpsRedirection();
