@@ -1,7 +1,6 @@
 ﻿using Bogus;
 using Microsoft.EntityFrameworkCore;
 using MovieApi.Models;
-using System.Collections;
 
 namespace MovieApi.Data
 {
@@ -15,20 +14,16 @@ namespace MovieApi.Data
 
             var movies = GenerateMovies(5);
             await context.AddRangeAsync(movies);
-            //To get Ids for movies
-            await context.SaveChangesAsync();
 
-            var reviews = GenerateReviews(movies, 20);
-            await context.AddRangeAsync(reviews);
-
-            var actors = GenerateActors(movies, 20);
+            var actors = GenerateAndAssignActors(movies, 20);
             await context.AddRangeAsync(actors);
 
 
             await context.SaveChangesAsync();
+
         }
 
-        private static IEnumerable<Actor> GenerateActors(IEnumerable<Movie> movies, int nrOfActors)
+        private static IEnumerable<Actor> GenerateAndAssignActors(IEnumerable<Movie> movies, int nrOfActors)
         {
             var actors = new List<Actor>(nrOfActors);
             for (int i = 0; i < nrOfActors; i++)
@@ -47,7 +42,7 @@ namespace MovieApi.Data
             return actors;
         }
 
-        private static IEnumerable<Review> GenerateReviews(IEnumerable<Movie> movies, int nrOfReviews)
+        private static ICollection<Review> GenerateReviews(int nrOfReviews)
         {
             var reviews = new List<Review>(nrOfReviews);
             for (int i = 0; i < nrOfReviews; i++)
@@ -57,7 +52,6 @@ namespace MovieApi.Data
                     ReviewerName = faker.Name.FullName(),
                     Comment = faker.Lorem.Sentence(10, 20),
                     Rating = faker.Random.Int(1, 5),
-                    MovieId = faker.PickRandom(movies).Id
                 };
 
                 reviews.Add(review);
@@ -83,12 +77,15 @@ namespace MovieApi.Data
                         Synopsis = faker.Lorem.Paragraph(),
                         Language = faker.Lorem.Word(),
                         Budget = faker.Random.Int(1000000, 1000000000)
-                    }
+                    },
+                    Reviews = GenerateReviews(faker.Random.Int(1, 10))
                 };
+
                 movies.Add(movie);
             }
 
             return movies;
         }
+
     }
 }
