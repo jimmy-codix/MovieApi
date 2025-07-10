@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 using MovieApi.Data;
+using MovieApi.DTOs;
 using MovieApi.Models;
 
 namespace MovieApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/movie")]
     [ApiController]
     public class MoviesController : ControllerBase
     {
@@ -23,16 +26,73 @@ namespace MovieApi.Controllers
 
         // GET: api/Movies
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Movie>>> GetMovie()
+        public async Task<ActionResult<IEnumerable<MovieDto>>> GetMovie()
         {
-            return await _context.Movie.ToListAsync();
+            var movies = await _context.Movie
+                .Select(movie => new MovieDto()
+                {
+                    Id = movie.Id,
+                    Title = movie.Title,
+                    Year = movie.Year,
+                    Genre = movie.Genre,
+                    Duration = movie.Duration
+                })
+                .ToListAsync();
+
+            return Ok(movies);
+        }
+
+        // GET: api/Movies/5
+        [HttpGet("{id}/details")]
+        public async Task<ActionResult<MovieDetailDto>> GetMovieDetails(int id)
+        {
+            //var movie = await _context.Movie.FindAsync(id);
+            var movie = await _context.Movie
+                .Where(m => m.Id == id)
+                .Select(movie => new MovieDetailDto
+                {
+                    Id = movie.Id,
+                    Title = movie.Title,
+                    Year = movie.Year,
+                    Genre = movie.Genre,
+                    Duration = movie.Duration,
+                    Actors = movie.Actors.Select(actor => new ActorDto
+                    {
+                        Name = actor.Name,
+                        BirthYear = actor.BirthYear
+                    }),
+                    Reviews = movie.Reviews.Select(reniew => new ReviewDto
+                    {
+                        Id = reniew.Id,
+                        ReviewerName = reniew.ReviewerName,
+                        Comment = reniew.Comment,
+                        Rating = reniew.Rating
+                })
+            })
+                //.AsNoTracking() // Optional: Use AsNoTracking for read-only queries
+                .FirstOrDefaultAsync(); // Use SingleOrDefaultAsync to get a single movie by id
+
+            if (movie == null)
+                return NotFound();
+
+            return Ok(movie);
         }
 
         // GET: api/Movies/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Movie>> GetMovie(int id)
+        public async Task<ActionResult<MovieDto>> GetMovie(int id)
         {
-            var movie = await _context.Movie.FindAsync(id);
+            var movie = await _context.Movie
+                .Where(m => m.Id == id)
+                .Select(movie => new MovieDto
+                {
+                    Id = movie.Id,
+                    Title = movie.Title,
+                    Year = movie.Year,
+                    Genre = movie.Genre,
+                    Duration = movie.Duration,
+                })
+                .FirstOrDefaultAsync();
 
             if (movie == null)
             {
