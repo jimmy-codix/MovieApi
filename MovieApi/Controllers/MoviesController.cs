@@ -31,7 +31,7 @@ namespace MovieApi.Controllers
             var movies = await _context.Movie
                 .Select(movie => new MovieDto()
                 {
-                    Id = movie.Id,
+                    //Id = movie.Id,
                     Title = movie.Title,
                     Year = movie.Year,
                     Genre = movie.Genre,
@@ -86,7 +86,7 @@ namespace MovieApi.Controllers
                 .Where(m => m.Id == id)
                 .Select(movie => new MovieDto
                 {
-                    Id = movie.Id,
+                    //Id = movie.Id,
                     Title = movie.Title,
                     Year = movie.Year,
                     Genre = movie.Genre,
@@ -133,11 +133,20 @@ namespace MovieApi.Controllers
             return NoContent();
         }
 
+        //TODO fix details
         // POST: api/Movies
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Movie>> PostMovie(Movie movie)
+        public async Task<ActionResult<MovieDto>> PostMovie(MovieCreateDto dto)
         {
+            var movie = new Movie()
+            {
+                Title = dto.Title,
+                Year = dto.Year,
+                Genre = dto.Genre,
+                Duration = dto.Duration
+            };
+
             _context.Movie.Add(movie);
             await _context.SaveChangesAsync();
 
