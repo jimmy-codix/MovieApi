@@ -29,25 +29,19 @@ namespace MovieApi.Controllers
         //    return await _context.Review.ToListAsync();
         //}
 
-        // GET: api/Reviews/5
+        // GET: api/Reviews/1/reviews
         [Route("/api/movies/{movieId}/reviews")]
         [HttpGet("{movieId}")]
-        public async Task<ActionResult<ReviewDto>> GetReview(int movieId)
+        public async Task<ActionResult<IEnumerable<ReviewDto>>> GetReviews(int movieId)
         {
-            //TODO : Two stage rocket.
-            var movie = await _context.Movie
-                                            .Include(m => m.Reviews)
-                                            .FirstOrDefaultAsync(m => m.Id == movieId);
-
-            var existe = await _context.Movie.AnyAsync(m => m.Id == movieId);
-            if (!existe)
+            if (!await _context.Movie.AnyAsync(m => m.Id == movieId))
             {
+                //TODO: (update later) implement problem details.
                 return NotFound();
             }
-          
 
-            //).Where(r => r.MovieId == movieId).FirstOrDefaultAsync();
-            var reviws = await _context.Review.Where(r => r.MovieId == movieId).Select(r => new ReviewDto
+            //set DTO for reviews
+            var reviews= await _context.Review.Where(r => r.MovieId == movieId).Select(r => new ReviewDto
             {
                 Id = r.Id,
                 ReviewerName = r.ReviewerName,
@@ -55,16 +49,6 @@ namespace MovieApi.Controllers
                 Rating = r.Rating
 
             }).ToListAsync();
-
-            if (movie == null) return NotFound();
-
-            var reviews = movie.Reviews.Select(r => new ReviewDto()
-            {
-                Id = r.Id,
-                ReviewerName = r.ReviewerName,
-                Comment = r.Comment,
-                Rating = r.Rating,
-            }).ToList();
 
             return Ok(reviews);
         }
