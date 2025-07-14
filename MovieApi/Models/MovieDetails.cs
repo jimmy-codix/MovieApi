@@ -1,4 +1,6 @@
-﻿namespace MovieApi.Models
+﻿using System.Text.Json.Serialization;
+
+namespace MovieApi.Models
 {
     public class MovieDetails
     {

@@ -5,6 +5,7 @@ using MovieApi.Extensions;
 
 namespace MovieApi
 {
+    //TODO : Fix models....they allow to many characters.
     public class Program
     {
         public static async Task Main(string[] args)

@@ -21,7 +21,7 @@ namespace MovieApi.Controllers
 
         public MoviesController(MovieApiContext context)
         {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         // GET: api/Movies
@@ -46,7 +46,10 @@ namespace MovieApi.Controllers
         [HttpGet("{id}/details")]
         public async Task<ActionResult<MovieDetailDto>> GetMovieDetails(int id)
         {
-            //var movie = await _context.Movie.FindAsync(id);
+            var movieExists = await _context.Movie.AnyAsync(m => m.Id == id);
+            if (!movieExists)
+                return NotFound();
+            
             var movie = await _context.Movie
                 .Where(m => m.Id == id)
                 .Select(movie => new MovieDetailDto
@@ -56,6 +59,9 @@ namespace MovieApi.Controllers
                     Year = movie.Year,
                     Genre = movie.Genre,
                     Duration = movie.Duration,
+                    Language = movie.MovieDetails.Language,
+                    Synopsis = movie.MovieDetails.Synopsis,
+                    Budget = movie.MovieDetails.Budget,
                     Actors = movie.Actors.Select(actor => new ActorDto
                     {
                         Name = actor.Name,
@@ -63,7 +69,6 @@ namespace MovieApi.Controllers
                     }),
                     Reviews = movie.Reviews.Select(reniew => new ReviewDto
                     {
-                        Id = reniew.Id,
                         ReviewerName = reniew.ReviewerName,
                         Comment = reniew.Comment,
                         Rating = reniew.Rating
@@ -71,9 +76,6 @@ namespace MovieApi.Controllers
             })
                 //.AsNoTracking() // Optional: Use AsNoTracking for read-only queries
                 .FirstOrDefaultAsync(); // Use SingleOrDefaultAsync to get a single movie by id
-
-            if (movie == null)
-                return NotFound();
 
             return Ok(movie);
         }
@@ -84,6 +86,7 @@ namespace MovieApi.Controllers
         {
             var movie = await _context.Movie
                 .Where(m => m.Id == id)
+                //.Include(m => m.MovieDetails) // Include MovieDetails if needed
                 .Select(movie => new MovieDto
                 {
                     //Id = movie.Id,
@@ -91,6 +94,7 @@ namespace MovieApi.Controllers
                     Year = movie.Year,
                     Genre = movie.Genre,
                     Duration = movie.Duration,
+                    Language = movie.MovieDetails.Language
                 })
                 .FirstOrDefaultAsync();
 
@@ -144,13 +148,19 @@ namespace MovieApi.Controllers
                 Title = dto.Title,
                 Year = dto.Year,
                 Genre = dto.Genre,
-                Duration = dto.Duration
+                Duration = dto.Duration,
+                MovieDetails = new MovieDetails()
+                {
+                    Synopsis = dto.Synopsis,
+                    Language = dto.Language,
+                    Budget = dto.Budget
+                }
             };
 
             _context.Movie.Add(movie);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetMovie", new { id = movie.Id }, movie);
+            return CreatedAtAction("GetMovie", new { id = movie.Id }, dto);
         }
 
         // DELETE: api/Movies/5

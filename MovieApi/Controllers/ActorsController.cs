@@ -10,7 +10,7 @@ using MovieApi.Models;
 
 namespace MovieApi.Controllers
 {
-    [Route("api/actor")]
+    [Route("api/actors")]
     [ApiController]
     public class ActorsController : ControllerBase
     {
@@ -75,11 +75,28 @@ namespace MovieApi.Controllers
 
         // POST: api/Actors
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [Route("api/movies/{movieId}/actors/{actorId}")]
+        [Route("~/api/movies/{movieId}/actors/{actorId}")]
         [HttpPost]
-        public async Task<ActionResult<Actor>> PostActor(Actor actor)
+        public async Task<ActionResult<Actor>> AddActorToMovie([FromRoute] int movieId, [FromRoute] int actorId)
         {
-            _context.Actor.Add(actor);
+            //Check if the movie exists
+            var movie = await _context.Movie
+                .Where(m => m.Id == movieId)
+                .FirstOrDefaultAsync();
+
+            if (movie == null) 
+                return NotFound("Movie not found.");
+
+            //Check if the actor exists
+            var actor = await _context.Actor
+                .Where(a => a.Id == actorId)
+                .FirstOrDefaultAsync();
+
+            if (actor == null)
+                return NotFound("Actor not found.");    
+
+            movie.Actors.Add(actor);
+
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetActor", new { id = actor.Id }, actor);

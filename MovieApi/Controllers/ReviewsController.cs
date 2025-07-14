@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieApi.Data;
+using MovieApi.DTOs;
 using MovieApi.Models;
 
 namespace MovieApi.Controllers
@@ -18,7 +19,7 @@ namespace MovieApi.Controllers
 
         public ReviewsController(MovieApiContext context)
         {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         // GET: api/Reviews
@@ -29,17 +30,43 @@ namespace MovieApi.Controllers
         }
 
         // GET: api/Reviews/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Review>> GetReview(int id)
+        [Route("/api/movies/{movieId}/reviews")]
+        [HttpGet("{movieId}")]
+        public async Task<ActionResult<ReviewDto>> GetReview(int movieId)
         {
-            var review = await _context.Review.FindAsync(id);
+            //TODO : Two stage rocket.
+            var movie = await _context.Movie
+                                            .Include(m => m.Reviews)
+                                            .FirstOrDefaultAsync(m => m.Id == movieId);
 
-            if (review == null)
+            var existe = await _context.Movie.AnyAsync(m => m.Id == movieId);
+            if (!existe)
             {
                 return NotFound();
             }
+          
 
-            return review;
+            //).Where(r => r.MovieId == movieId).FirstOrDefaultAsync();
+            var reviws = await _context.Review.Where(r => r.MovieId == movieId).Select(r => new ReviewDto
+            {
+                Id = r.Id,
+                ReviewerName = r.ReviewerName,
+                Comment = r.Comment,
+                Rating = r.Rating
+
+            }).ToListAsync();
+
+            if (movie == null) return NotFound();
+
+            var reviews = movie.Reviews.Select(r => new ReviewDto()
+            {
+                Id = r.Id,
+                ReviewerName = r.ReviewerName,
+                Comment = r.Comment,
+                Rating = r.Rating,
+            }).ToList();
+
+            return Ok(reviews);
         }
 
         // PUT: api/Reviews/5
@@ -60,7 +87,7 @@ namespace MovieApi.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ReviewExists(id))
+                if (!await ReviewExists(id))
                 {
                     return NotFound();
                 }
@@ -100,9 +127,9 @@ namespace MovieApi.Controllers
             return NoContent();
         }
 
-        private bool ReviewExists(int id)
+        private async Task<bool> ReviewExists(int id)
         {
-            return _context.Review.Any(e => e.Id == id);
+            return await _context.Review.AnyAsync(e => e.Id == id);
         }
     }
 }
