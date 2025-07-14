@@ -13,7 +13,7 @@ using MovieApi.Models;
 
 namespace MovieApi.Controllers
 {
-    [Route("api/movie")]
+    [Route("api/movies")]
     [ApiController]
     public class MoviesController : ControllerBase
     {
@@ -31,7 +31,7 @@ namespace MovieApi.Controllers
             var movies = await _context.Movie
                 .Select(movie => new MovieDto()
                 {
-                    //Id = movie.Id,
+                    Id = movie.Id,
                     Title = movie.Title,
                     Year = movie.Year,
                     Genre = movie.Genre,
