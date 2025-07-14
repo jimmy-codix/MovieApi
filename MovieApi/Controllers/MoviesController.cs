@@ -35,7 +35,10 @@ namespace MovieApi.Controllers
                     Title = movie.Title,
                     Year = movie.Year,
                     Genre = movie.Genre,
-                    Duration = movie.Duration
+                    Duration = movie.Duration,
+                    Language = movie.MovieDetails.Language,
+                    Synopsis = movie.MovieDetails.Synopsis,
+                    Budget = movie.MovieDetails.Budget.ToString()
                 })
                 .ToListAsync();
 
@@ -43,6 +46,33 @@ namespace MovieApi.Controllers
         }
 
         // GET: api/Movies/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<MovieDto>> GetMovie(int id)
+        {
+            var movieExists = await _context.Movie.AnyAsync(m => m.Id == id);
+            if (!movieExists)
+                return NotFound();
+
+            var movieDto = await _context.Movie
+                .Where(m => m.Id == id)
+                .Select(movie => new MovieDto
+                {
+                    Id = movie.Id,
+                    Title = movie.Title,
+                    Year = movie.Year,
+                    Genre = movie.Genre,
+                    Duration = movie.Duration,
+                    Language = movie.MovieDetails.Language,
+                    Synopsis = movie.MovieDetails.Synopsis,
+                    Budget = movie.MovieDetails.Budget.ToString()
+                })
+                .FirstOrDefaultAsync();
+
+            //The null check is done at the beginning of the method.
+            return movieDto!;
+        }
+
+        // GET: api/Movies/5/details
         [HttpGet("{id}/details")]
         public async Task<ActionResult<MovieDetailDto>> GetMovieDetails(int id)
         {
@@ -80,41 +110,37 @@ namespace MovieApi.Controllers
             return Ok(movie);
         }
 
-        // GET: api/Movies/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<MovieDto>> GetMovie(int id)
+
+        // PUT: api/Movies/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutMovie(int id, MovieUpdateDto movieDto)
         {
+
+            if (id != movieDto.Id)
+            {
+                return BadRequest();
+            }
+
             var movie = await _context.Movie
-                .Where(m => m.Id == id)
-                //.Include(m => m.MovieDetails) // Include MovieDetails if needed
-                .Select(movie => new MovieDto
-                {
-                    //Id = movie.Id,
-                    Title = movie.Title,
-                    Year = movie.Year,
-                    Genre = movie.Genre,
-                    Duration = movie.Duration,
-                    Language = movie.MovieDetails.Language
-                })
-                .FirstOrDefaultAsync();
+                .Include(m => m.MovieDetails) // Include MovieDetails to update it
+                .FirstOrDefaultAsync(m => m.Id == id);
 
             if (movie == null)
             {
                 return NotFound();
             }
 
-            return movie;
-        }
+            // Update the movie properties from the DTO
+            movie.Title = movieDto.Title;
+            movie.Year = movieDto.Year;
+            movie.Genre = movieDto.Genre;
+            movie.Duration = movieDto.Duration;
+            // Update the MovieDetails properties from the DTO
+            movie.MovieDetails.Synopsis = movieDto.Synopsis;
+            movie.MovieDetails.Language = movieDto.Language;
+            movie.MovieDetails.Budget = movieDto.Budget;
 
-        // PUT: api/Movies/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutMovie(int id, Movie movie)
-        {
-            if (id != movie.Id)
-            {
-                return BadRequest();
-            }
 
             _context.Entry(movie).State = EntityState.Modified;
 
@@ -137,7 +163,6 @@ namespace MovieApi.Controllers
             return NoContent();
         }
 
-        //TODO fix details
         // POST: api/Movies
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]

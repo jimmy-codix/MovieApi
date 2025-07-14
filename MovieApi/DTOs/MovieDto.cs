@@ -10,5 +10,7 @@
         public int Duration { get; set; }
 
         public string Language { get; set; } = null!;
+        public string Synopsis { get; set; } = null!;
+        public string Budget { get; set; } = null!;
     }
 }

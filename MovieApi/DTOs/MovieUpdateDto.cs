@@ -2,9 +2,11 @@
 
 namespace MovieApi.DTOs
 {
-    //TODO: Change to record type.
-    public class MovieCreateDto
+    public class MovieUpdateDto
     {
+        [Required]
+        [Range(1, int.MaxValue)]
+        public int Id { get; set; }
         [Required]
         [StringLength(100, MinimumLength = 5)]
         public string Title { get; set; } = null!;

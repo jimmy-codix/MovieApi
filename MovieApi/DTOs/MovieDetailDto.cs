@@ -13,9 +13,6 @@ namespace MovieApi.DTOs
         public string Synopsis { get; set; } = null!;
         public int Budget { get; set; }
 
-        //TODO implement MovieDetails
-        //public MovieDetails MovieDetails { get; set; } = null!;
-
         public IEnumerable<ReviewDto> Reviews { get; set; } = Enumerable.Empty<ReviewDto>();
         public IEnumerable<ActorDto> Actors { get; set; } = Enumerable.Empty<ActorDto>();
     }
