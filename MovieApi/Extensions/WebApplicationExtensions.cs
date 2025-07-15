@@ -13,8 +13,12 @@ namespace MovieApi.Extensions
                 var serviceProvider = scope.ServiceProvider;
                 var context = serviceProvider.GetRequiredService<MovieApiContext>();
 
-                //await context.Database.EnsureDeletedAsync();
-                //await context.Database.MigrateAsync();
+                //Can i connect to the database? If not, delete and recreate it
+                if (!await context.Database.CanConnectAsync())
+                {
+                    await context.Database.EnsureDeletedAsync();
+                    await context.Database.MigrateAsync();
+                }
 
                 try
                 {
